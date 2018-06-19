@@ -9,12 +9,12 @@ class EncoderCNN(nn.Module):
         # Load the pretrained ResNet and replace top fc layer.
         super(EncoderCNN, self).__init__()
         # resnet = models.resnet152(pretrained=True)
-        resnet = models.resnet10l(pretrained=True)
+        resnet = models.resnet101(pretrained=True)
         modules = list(resnet.children())[:-1]      # delete the last fc layer.
         self.resnet = nn.Sequential(*modules)
         self.linear = nn.Linear(resnet.fc.in_features, embed_size)
         self.bn = nn.BatchNorm1d(embed_size, momentum=0.01)
-        
+
     def forward(self, images):
         # Extract feature vectors from input ROI
         with torch.no_grad():
@@ -31,18 +31,18 @@ class DecoderRNN(nn.Module):
         self.lstm = nn.LSTM(embed_size, hidden_size, num_layers, batch_first=True)
         self.linear = nn.Linear(hidden_size, num_class)
         self.max_seg_length = max_seq_length
-        
+
     def forward(self, features, lengths):
         # Decode image feature vectors and generates captions.
         # features shape [batch, sequence length, feature_size]
-        packed = pack_padded_sequence(features, lengths, batch_first=True) 
+        packed = pack_padded_sequence(features, lengths, batch_first=True)
         hiddens, _ = self.lstm(packed)
         # [0] for extract from a pack sequence
         outputs = self.linear(hiddens[0])
         return outputs
-    
+
     def sample(self, features, states=None):
-        # Generate positions for given sequence 
+        # Generate positions for given sequence
         sampled_ids = []
         inputs = features.unsqueeze(1)
         for i in range(self.max_seg_length):
@@ -54,4 +54,3 @@ class DecoderRNN(nn.Module):
             inputs = inputs.unsqueeze(1)                         # inputs: (batch_size, 1, embed_size)
         sampled_ids = torch.stack(sampled_ids, 1)                # sampled_ids: (batch_size, max_seq_length)
         return sampled_ids
-

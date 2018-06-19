@@ -1,1 +1,1 @@
-fancy auto-focus with bidrectional RNN 
+fancy auto-focus with CNN-LSTM strucure based on pytorch
