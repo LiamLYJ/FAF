@@ -62,12 +62,7 @@ def main(args):
             sequence_length = labels.shape[1]
             # print ('sequence_length: ', sequence_length)
             for index in range(sequence_length):
-                try:
-                    features.append(encoder(images[:,i,:,:,:]))
-                except:
-                    print ('images: ', images.shape)
-                    print ('index: ', index)
-
+                features.append(encoder(images[:,index,:,:,:]))
             features = torch.stack(features, 1)
             outputs = decoder(features, lengths)
             # print ('outputs :', outputs.shape)
