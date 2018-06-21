@@ -96,7 +96,7 @@ if __name__ == '__main__':
     parser.add_argument('--log_step', type=int , default=10, help='step size for prining log info')
     parser.add_argument('--save_step', type=int , default=1000, help='step size for saving trained models')
 
-    parser.add_argument('--data_file', type=str, default='tmp.pkl', help='pkl file ')
+    parser.add_argument('--data_file', type=str, default='./data/tmp.pkl', help='pkl file ')
 
     # Model parameters
     parser.add_argument('--embed_size', type=int , default=256, help='dimension of embedding vectors')

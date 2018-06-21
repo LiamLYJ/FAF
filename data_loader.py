@@ -64,8 +64,8 @@ def collate_fn(data):
     for item in tmp_images:
         images.append(trans_back(item))
     images = torch.stack(images, 0)
-    print ('image shape: ', images.shape)
-    print ('label shape: ', labels.shape)
+    # print ('image shape: ', images.shape)
+    # print ('label shape: ', labels.shape)
 
     return images, labels
 
