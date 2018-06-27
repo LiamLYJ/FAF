@@ -1,13 +1,61 @@
 import pickle
 import os
 import sys
+import random
 import numpy as np
 from PIL import Image
 from data_loader import get_loader
 import glob
+from scipy.misc import imsave
 
-def process(input_folder, save_path, range_size =2, step = 2, type = "*.jpg", size = 256):
+def get_random_roi(img, size, min_value = 30, max_value = 240, rate = 0.4):
+    height, width, _ = np.array(img).shape
+    while (True):
+        # 0.2, 0.57, 0.2 0.46 is setted manuly
+        # position_y, position_x = random.uniform(0.2, 0.57), random.uniform(0.2, 0.46)
+        position_y, position_x = random.uniform(0.1, 1 - size / height), random.uniform(0.1, 1 - size / width)
+        start_y = int(position_y * height)
+        start_x = int(position_x * width)
+        if (start_y + size) < height and (start_x + size) < width:
+            roi = img.crop((start_y, start_x, start_y + size, start_x + size))
+            roi_array = np.array(roi)
+            total_pixel = size * size * 3
+            good_pixel = ((min_value < roi_array) & (roi_array < max_value)).sum()
+            # print ('good: ', good_pixel)
+            # print ('rate: ', good_pixel / total_pixel)
+            # print ('start_y:' , start_y)
+            # print ('start_x' , start_x)
+            if (good_pixel / total_pixel > rate):
+                return start_y, start_x
+
+
+def cut_roi(input_folder, save_path, per_samples = 10, type = '.png', size = 256):
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
+    count = 0
+    for root, dirs, files in os.walk(input_folder):
+        if dirs:
+            continue
+        # print ('root: ', root)
+        # print ('dirs: ', dirs)
+        # print ('files: ', files)
+        files.sort()
+        for i in range(per_samples):
+            for j,file in enumerate(files):
+                cur_save_path = os.path.join(save_path, '%02d_%03d'%(count, i))
+                if not os.path.exists(cur_save_path):
+                    os.mkdir(cur_save_path)
+                img = Image.open(os.path.join(root, file))
+                if j == 0:
+                    start_y, start_x = get_random_roi(img, size)
+                roi = img.crop((start_y, start_x, start_y + size, start_x + size))
+                roi.save(os.path.join(cur_save_path, '%03d%s'%(j,type)))
+        count += 1
+
+
+def process(input_folder, save_path, range_size =2, step = 5, type = "*.png", size = 256):
 # foucs_index : index to be the most clear one
+    remove_flag = False
     if not os.path.exists(save_path):
         os.mkdir(save_path)
     for root, dirs, files in os.walk(input_folder):
@@ -23,12 +71,22 @@ def process(input_folder, save_path, range_size =2, step = 2, type = "*.jpg", si
         for i in range(2*range_size +1):
             jump = (i - range_size) * step
             index = jump + focus_index
-            target_file = os.path.join(save_folder, '%03d.jpg'%(i))
-            source_file = os.path.join(root, files[index])
+            target_file = os.path.join(save_folder, '%03d.png'%(i))
+            if index >= 0 and index < len(files):
+                source_file = os.path.join(root, files[index])
+            else :
+                remove_flag = True
+                print ('contain not enough')
+                break
             command = 'cp %s %s'%(source_file, target_file)
             os.system(command)
+        if remove_flag:
+            command = 'rm -rf %s'%(save_folder)
+            print (save_folder)
+            os.system(command)
+            remove_flag = False
 
-def get_focus_index(folder, type = '*.jpg'):
+def get_focus_index(folder, type = '*.png'):
     focus_index = 0
     count = 0
     sharpness = np.finfo(float).eps
@@ -82,7 +140,7 @@ def test(dump_name):
     files= []
     labels = []
     for i in range(5):
-        file_name = './data/images/%d.jpg'%(i)
+        file_name = './data/images/%d.png'%(i)
         files.append(file_name)
         labels.append(i)
     files_list = []
@@ -110,5 +168,6 @@ def test(dump_name):
 
 if __name__ == '__main__':
     # test('tmp.pkl')
-    process('./data/FAF_data','./data/tmp')
+    # cut_roi('/Users/lyj/Desktop/af_data/', './data/af_data')
+    process('./data/af_data','./data/tmp', range_size = 3, step = 3)
     make_dump('./data/tmp', './data/tmp.pkl', check_results = True)

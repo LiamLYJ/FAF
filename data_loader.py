@@ -22,10 +22,26 @@ class AF(data.Dataset):
 
 
     def __getitem__(self, index):
-        file_names = self.files_list[index]
-        labels = self.labels_list[index]
-        # print ('file_names: ', file_names)
-        # print ('labels: ', labels)
+        file_names_pure = self.files_list[index]
+        labels_pure = self.labels_list[index]
+        # print (file_names_pure)
+        # print (labels_pure)
+        # raise
+        assert (len(labels_pure) == len(file_names_pure))
+        # random_select [0 ,1 ,2] same, flip, random_sequence
+        # random_select = np.random.choice(3, 1, p=[0.43, 0.43, 0.14])[0]
+        random_select = np.random.choice(3, 1, p=[1.0, 0.0, 0.0])[0]
+        if random_select == 0:
+            permutation = np.arange(len(labels_pure))
+        elif random_select == 1:
+            permutation = np.arange(len(labels_pure))[::-1]
+        else:
+            permutation = np.random.permutation(len(labels_pure))
+        file_names = []
+        labels = []
+        for index in permutation:
+            labels.append(labels_pure[index])
+            file_names.append(file_names_pure[index])
         assert (len(labels) == len(file_names))
         images = []
         trans_back = transforms.ToTensor()
