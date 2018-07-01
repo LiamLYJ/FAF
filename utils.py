@@ -4,6 +4,29 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch.nn.utils.rnn import pack_padded_sequence
 import re
+from PIL import Image
+
+class memory(object):
+    def __init__(self, memory_capacity, img_size):
+        self.img_size = img_size
+        self.memory_capacity = memory_capacity
+        self.memory_counter = 0
+        self.state_pool = np.zeros([memory_capacity, img_size, img_size, 3])
+        self.state_pool_ = np.zeros([memory_capacity, img_size, img_size, 3])
+        self.reward_pool = np.zeros([memory_capacity, 1])
+        self.action_pool = np.zeros([memory_capacity, 1])
+
+    def store_transition(self, file_name_s, a,r ,file_name_s_):
+        index = self.memory_counter % self.memory_capacity
+        state_img = np.asarray(Image.open(s), dytpe = np.int32)
+        state_img_ = np.asarray(Image.open(s_), dytpe = np.int32)
+        self.state_pool[index, :] = state_img
+        self.state_pool_[index, :] = state_img_
+        self.reward_pool[index,0] = r
+        self.action_pool[index,0] = a
+        self.memory_counter += 1
+
+
 
 def tryint(s):
     try:

@@ -14,10 +14,12 @@ class RL_net(nn.Module):
         modules = list(resnet.children())[:-1]      # delete the last fc layer.
         self.resnet = nn.Sequential(*modules)
         self.fc1 = nn.Linear(resnet.fc.in_features, hidden_size)
-        self.bn = nn.BatchNorm1d(embed_size, momentum=0.01)
+        self.bn = nn.BatchNorm1d(hidden_size, momentum=0.01)
         self.fc2 = nn.Linear(hidden_size, n_actions)
 
     def forward(self, images):
+        print ('images: ', images.shape)
+        raise
         # Extract feature vectors from input ROI
         with torch.no_grad():
             features = self.resnet(images)

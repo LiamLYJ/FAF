@@ -6,7 +6,6 @@ import numpy as np
 from PIL import Image
 from data_loader import get_loader
 import glob
-from scipy.misc import imsave
 from utils import *
 
 def get_random_roi(img, size, min_value = 30, max_value = 240, rate = 0.4):
