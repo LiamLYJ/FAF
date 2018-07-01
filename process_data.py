@@ -7,6 +7,7 @@ from PIL import Image
 from data_loader import get_loader
 import glob
 from scipy.misc import imsave
+from utils import *
 
 def get_random_roi(img, size, min_value = 30, max_value = 240, rate = 0.4):
     height, width, _ = np.array(img).shape
@@ -53,38 +54,44 @@ def cut_roi(input_folder, save_path, per_samples = 10, type = '.png', size = 256
         count += 1
 
 
-def process(input_folder, save_path, range_size =2, step = 5, type = "*.png", size = 256):
-# foucs_index : index to be the most clear one
-    remove_flag = False
+def process(input_folder, save_path, range_size =2, step = 5, type = "*.png", size = 256, remove_flag = None):
+    # foucs_index : index to be the most clear one
+    count = 0
     if not os.path.exists(save_path):
         os.mkdir(save_path)
     for root, dirs, files in os.walk(input_folder):
         if dirs:
             continue
         files.sort()
-        folder = root.split('/')[-1]
+        folder = '%05d'%(count)
         focus_index = get_focus_index(root, type = type)
         save_folder = os.path.join(save_path, folder)
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
         # left and right plus focus one
-        for i in range(2*range_size +1):
-            jump = (i - range_size) * step
+        for i in range(focus_index - range_size, focus_index + range_size + 1):
+            jump = (i - focus_index) * step
             index = jump + focus_index
-            target_file = os.path.join(save_folder, '%03d.png'%(i))
+            target_file = os.path.join(save_folder, '%d.png'%(i-focus_index))
             if index >= 0 and index < len(files):
                 source_file = os.path.join(root, files[index])
             else :
-                remove_flag = True
-                print ('contain not enough')
-                break
+                if remove_flag is None:
+                    print ('in %s not enough roi, skip %d'%(save_folder, (i - focus_index)))
+                    continue
+                else:
+                    remove_flag = True
+                    print ('contain not enough, delet this forder')
+                    break
             command = 'cp %s %s'%(source_file, target_file)
             os.system(command)
+        count += 1
         if remove_flag:
             command = 'rm -rf %s'%(save_folder)
             print (save_folder)
             os.system(command)
             remove_flag = False
+
 
 def get_focus_index(folder, type = '*.png'):
     focus_index = 0
@@ -111,12 +118,14 @@ def make_dump(input_path, dump_name, check_results = False):
             continue
         img_files = []
         labels = []
-        files.sort()
-        for file in files:
-            label = int(file.split('.')[0])
+        # files.sort()
+        # sort by numer
+        sort_nicely(files)
+        # print (files)
+        for label_index, file in enumerate(files):
             image_name = os.path.join(root, file)
             img_files.append(image_name)
-            labels.append(label)
+            labels.append(label_index)
         img_files_list.append(img_files)
         labels_list.append(labels)
     data = {}
@@ -169,5 +178,6 @@ def test(dump_name):
 if __name__ == '__main__':
     # test('tmp.pkl')
     # cut_roi('/Users/lyj/Desktop/af_data/', './data/af_data')
-    process('./data/af_data','./data/tmp', range_size = 3, step = 3)
-    make_dump('./data/tmp', './data/tmp.pkl', check_results = True)
+    process('./data/af_data','./data/tmp', range_size = 3, step = 6)
+    # process('./data/af_data','./data/tmp', range_size = 3, step = 6, remove_flag = False)
+    # make_dump('./data/tmp', './data/tmp.pkl', check_results = True)

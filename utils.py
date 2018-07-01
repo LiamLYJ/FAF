@@ -3,6 +3,26 @@ import numpy as np
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.nn.utils.rnn import pack_padded_sequence
+import re
+
+def tryint(s):
+    try:
+        return int(s)
+    except:
+        return s
+
+def alphanum_key(s):
+    """ Turn a string into a list of string and number chunks.
+        "z23a" -> ["z", 23, "a"]
+    """
+    tmp = [ tryint(c) for c in re.split('([0-9]+)', s) ]
+    if tmp[0] == '-':
+        tmp[1] = -1 * tmp[1]
+    return tmp[1]
+
+def sort_nicely(l):
+    l.sort(key=alphanum_key)
+
 
 def test():
     batch_size = 3
@@ -16,7 +36,7 @@ def test():
     y = torch.stack((x,x),1)
     print (y)
     print (y.shape)
-    raise 
+    raise
     input_tensor[0]= torch.FloatTensor([1,2,3]).view(3,-1)
     input_tensor[1] = torch.FloatTensor([4,5,0]).view(3,-1)
     input_tensor[2] = torch.FloatTensor([6,0,0]).view(3,-1)

@@ -2,6 +2,31 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 from torch.nn.utils.rnn import pack_padded_sequence
+import torch.nn.functional as F
+
+
+class RL_net(nn.Module):
+    def __init__(self, hidden_size, n_actions):
+        # Load the pretrained ResNet and replace top fc layer.
+        super(RL_net, self).__init__()
+        # resnet = models.resnet152(pretrained=True)
+        resnet = models.resnet101(pretrained=True)
+        modules = list(resnet.children())[:-1]      # delete the last fc layer.
+        self.resnet = nn.Sequential(*modules)
+        self.fc1 = nn.Linear(resnet.fc.in_features, hidden_size)
+        self.bn = nn.BatchNorm1d(embed_size, momentum=0.01)
+        self.fc2 = nn.Linear(hidden_size, n_actions)
+
+    def forward(self, images):
+        # Extract feature vectors from input ROI
+        with torch.no_grad():
+            features = self.resnet(images)
+        features = features.reshape(features.size(0), -1)
+        features = self.bn(self.fc1(features))
+        # features = self.linear(features)
+        features_relu = F.relu(features)
+        actions_value = self.fc2(features_relu)
+        return actions_value
 
 
 class EncoderCNN(nn.Module):
