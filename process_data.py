@@ -29,7 +29,7 @@ def get_random_roi(img, size, min_value = 30, max_value = 240, rate = 0.4):
                 return start_y, start_x
 
 
-def cut_roi(input_folder, save_path, per_samples = 10, type = '.png', size = 256):
+def cut_roi(input_folder, save_path, per_samples = 10, type = '.png', size = 224):
     if not os.path.exists(save_path):
         os.mkdir(save_path)
     count = 0
@@ -53,7 +53,7 @@ def cut_roi(input_folder, save_path, per_samples = 10, type = '.png', size = 256
         count += 1
 
 
-def process(input_folder, save_path, range_size =2, step = 5, type = "*.png", size = 256, remove_flag = None):
+def process(input_folder, save_path, range_size =2, step = 5, type = "*.png", size = 224, remove_flag = None):
     # foucs_index : index to be the most clear one
     count = 0
     if not os.path.exists(save_path):

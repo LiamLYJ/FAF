@@ -18,14 +18,13 @@ class RL_net(nn.Module):
         self.fc2 = nn.Linear(hidden_size, n_actions)
 
     def forward(self, images):
-        print ('images: ', images.shape)
-        raise
         # Extract feature vectors from input ROI
         with torch.no_grad():
             features = self.resnet(images)
         features = features.reshape(features.size(0), -1)
-        features = self.bn(self.fc1(features))
-        # features = self.linear(features)
+        # print ('feateus: ', features.shape)
+        features = self.fc1(features)
+        # features = self.bn(features)
         features_relu = F.relu(features)
         actions_value = self.fc2(features_relu)
         return actions_value

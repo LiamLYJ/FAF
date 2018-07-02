@@ -11,15 +11,21 @@ class memory(object):
         self.img_size = img_size
         self.memory_capacity = memory_capacity
         self.memory_counter = 0
-        self.state_pool = np.zeros([memory_capacity, img_size, img_size, 3])
-        self.state_pool_ = np.zeros([memory_capacity, img_size, img_size, 3])
+        self.state_pool = np.zeros([memory_capacity, 3, img_size, img_size, ])
+        self.state_pool_ = np.zeros([memory_capacity, 3, img_size, img_size, ])
         self.reward_pool = np.zeros([memory_capacity, 1])
         self.action_pool = np.zeros([memory_capacity, 1])
 
-    def store_transition(self, file_name_s, a,r ,file_name_s_):
+    def store_transition(self, file_name_s, a,r ,file_name_s_, transform = None):
         index = self.memory_counter % self.memory_capacity
-        state_img = np.asarray(Image.open(s), dytpe = np.int32)
-        state_img_ = np.asarray(Image.open(s_), dytpe = np.int32)
+        if transform == None:
+            state_img = np.asarray(Image.open(file_name_s), dytpe = np.int32)
+            state_img_ = np.asarray(Image.open(file_name_s_), dytpe = np.int32)
+        else:
+            img_s = transform(Image.open(file_name_s))
+            img_s_ = transform(Image.open(file_name_s_))
+            state_img = img_s.numpy()
+            state_img_ = img_s_.numpy()
         self.state_pool[index, :] = state_img
         self.state_pool_[index, :] = state_img_
         self.reward_pool[index,0] = r

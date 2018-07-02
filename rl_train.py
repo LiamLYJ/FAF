@@ -6,18 +6,27 @@ from nets import RL_net
 from af_env import AF_env
 from utils import *
 from PIL import Image
+from torchvision import transforms
 
 # Hyper Parameters
 BATCH_SIZE = 32
 LR = 0.01                   # learning rate
 EPSILON = 0.9               # greedy policy
 GAMMA = 0.9                 # reward discount
-TARGET_REPLACE_ITER = 100   # target update frequency
-MEMORY_CAPACITY = 2000
+TARGET_REPLACE_ITER = 5   # target update frequency
+MEMORY_CAPACITY = 20
 env = AF_env(range_size = 3, step_size = 2, source_folder = './data/tmp')
 N_ACTIONS = env.n_actions
 HIDDEN_SIZE = 256
-IMG_SIZE = 256
+IMG_SIZE = 224
+
+
+TRANSFORM = transforms.Compose([
+    transforms.RandomCrop(IMG_SIZE),
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor(),
+    transforms.Normalize((0.485, 0.456, 0.406),
+                         (0.229, 0.224, 0.225))])
 
 class DQN(object):
     def __init__(self):
@@ -27,10 +36,10 @@ class DQN(object):
         self.memory = memory(MEMORY_CAPACITY, IMG_SIZE) # initialize memory
         self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)
         self.loss_func = nn.MSELoss()
+        self.transform = TRANSFORM
 
     def choose_action(self, file_name_s):
-        x = np.asarray(Image.open(file_name_s), np.int32)
-        x = torch.Tensor(x)
+        x = self.transform(Image.open(file_name_s))
         x = x.unsqueeze(0)
         # input only one sample
         if np.random.uniform() < EPSILON:   # greedy
@@ -43,7 +52,7 @@ class DQN(object):
         return action
 
     def store_transition(self, file_name_s, a, r, file_name_s_):
-        self.memory.store_transition(file_name_s, a, r, file_name_s_)
+        self.memory.store_transition(file_name_s, a, r, file_name_s_, transform = self.transform)
 
     def learn(self):
         # target parameter update
@@ -55,7 +64,9 @@ class DQN(object):
         sample_index = np.random.choice(MEMORY_CAPACITY, BATCH_SIZE)
 
         batch_memory_s = self.memory.state_pool[sample_index, :]
+        batch_memory_s = np.transpose(batch_memory_s, [0, 3, 1, 2])
         batch_memory_s_ = self.memory.state_pool_[sample_index, :]
+        batch_memory_s_ = np.transpose(batch_memory_s_ , [0, 3, 1, 2])
         batch_memory_a = self.memory.action_pool[sample_index, 0]
         batch_memory_r = self.memory.reward_pool[sample_index, 0]
 
@@ -88,10 +99,7 @@ for i_episode in range(400):
         s_, file_name_s_, r, done = env.step(a)
 
         # modify the reward
-        # x, x_dot, theta, theta_dot = s_
-        # r1 = (env.x_threshold - abs(x)) / env.x_threshold - 0.8
-        # r2 = (env.theta_threshold_radians - abs(theta)) / env.theta_threshold_radians - 0.5
-        # r = r1 + r2
+        # r = 
 
         dqn.store_transition(file_name_s, a, r, file_name_s_)
 
