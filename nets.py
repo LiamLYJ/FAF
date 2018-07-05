@@ -19,6 +19,7 @@ class RL_net(nn.Module):
 
     def forward(self, images):
         # Extract feature vectors from input ROI
+        # print ('images shape: ', images.shape)
         with torch.no_grad():
             features = self.resnet(images)
         features = features.reshape(features.size(0), -1)
